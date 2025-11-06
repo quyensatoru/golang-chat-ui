@@ -4,14 +4,7 @@ import { initializeApp } from "firebase/app";
 
 export default function useFirebase() {
     const app = initializeApp({
-        // apiKey: "AIzaSyANv2UXxunG5WF5rG1-ufvihaYVfVh_cUo",
-        // authDomain: "golang-toturial.firebaseapp.com",
-        // databaseURL: "https://golang-toturial-default-rtdb.asia-southeast1.firebasedatabase.app",
-        // projectId: "golang-toturial",
-        // storageBucket: "golang-toturial.firebasestorage.app",
-        // messagingSenderId: "592894761623",
-        // appId: "1:592894761623:web:719e5eaca89782eddaa7d2",
-        // measurementId: "G-3X4L2BCGSV"
+        //config app firebase
     });
 
     const auth = getAuth(app);
