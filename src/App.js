@@ -9,6 +9,7 @@ import useFirebase from "./hook/firebase";
 import LoginPage from "./pages/login";
 import SettingsPage from "./pages/settings";
 import ClustersPage from "./pages/clusters";
+import SitesPage from "./pages/sites";
 
 const ProtectedRoute = ({ user }) => {
     if (!user) {
@@ -59,6 +60,7 @@ export default function App() {
                 <Route element={<ProtectedRoute user={user} />}>
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/clusters" element={<ClustersPage />} />
+                    <Route path="/sites" element={<SitesPage />} />
                     <Route path="/editor" element={<EditorPage />} />
                     <Route path="/chat" element={<ChatPage />} />
                     <Route path="/settings" element={<SettingsPage />} />

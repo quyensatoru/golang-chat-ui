@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 const navItems = [
   { key: 'dashboard', label: 'Dashboard', icon: <Users className="h-4 w-4" />, path: '/dashboard', description: 'Overview and analytics' },
   { key: 'clusters', label: 'Clusters', icon: <Server className="h-4 w-4" />, path: '/clusters', description: 'Manage server clusters' },
+  { key: 'sites', label: 'Sites', icon: <Server className="h-4 w-4" />, path: '/sites', description: 'Manage applications (API + CMS)' },
   { key: 'editor', label: 'Editor', icon: <Code className="h-4 w-4" />, path: '/editor', description: 'Code editor' },
   { key: 'chat', label: 'Chat', icon: <MessageSquare className="h-4 w-4" />, path: '/chat', description: 'Messages' },
 ]

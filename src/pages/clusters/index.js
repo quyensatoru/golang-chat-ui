@@ -3,15 +3,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
+import { X } from 'lucide-react';
 
-// Basic modal component
-const Modal = ({ isOpen, onClose, children }) => {
+// Basic modal component with scrollable content
+const Modal = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card rounded-lg shadow-lg max-w-md w-full mx-4">
-        <div className="p-6">{children}</div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between border-b p-6">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1">
+          <div className="p-6">{children}</div>
+        </div>
       </div>
     </div>
   );
@@ -119,56 +128,57 @@ export default function ClustersPage() {
       </Card>
 
       {/* Add Cluster Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Cluster">
         <form onSubmit={handleSubmit}>
-          <h2 className="text-lg font-semibold mb-4">Add New Cluster</h2>
-          
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {/* Server Info Section */}
             <div>
-              <Label htmlFor="name">Label</Label>
-              <Input
-                id="name"
-                type="text"
-                value={newCluster.name}
-                onChange={(e) => setNewCluster({ ...newCluster, name: e.target.value })}
-                placeholder="e.g cluster-01"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="ip">IP Address</Label>
-              <Input
-                id="ip"
-                type="text"
-                value={newCluster.ip_address}
-                onChange={(e) => setNewCluster({ ...newCluster, ip_address: e.target.value })}
-                placeholder="e.g. 192.168.1.100"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                value={newCluster.username}
-                onChange={(e) => setNewCluster({ ...newCluster, username: e.target.value })}
-                placeholder="SSH username"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newCluster.password}
-                onChange={(e) => setNewCluster({ ...newCluster, password: e.target.value })}
-                placeholder="SSH password"
-                required
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="name">Cluster Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={newCluster.name}
+                    onChange={(e) => setNewCluster({ ...newCluster, name: e.target.value })}
+                    placeholder="e.g cluster-01"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ip">IP Address</Label>
+                  <Input
+                    id="ip"
+                    type="text"
+                    value={newCluster.ip_address}
+                    onChange={(e) => setNewCluster({ ...newCluster, ip_address: e.target.value })}
+                    placeholder="e.g. 192.168.1.100"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={newCluster.username}
+                    onChange={(e) => setNewCluster({ ...newCluster, username: e.target.value })}
+                    placeholder="SSH username"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newCluster.password}
+                    onChange={(e) => setNewCluster({ ...newCluster, password: e.target.value })}
+                    placeholder="SSH password"
+                    required
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
