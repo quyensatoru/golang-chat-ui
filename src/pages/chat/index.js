@@ -50,7 +50,6 @@ export default function ChatPage() {
                     console.log("📩 Received:", data);
 
                     if (data.type === 'message') {
-                        // chỉ append tin nhắn đúng contact đang mở
                         const now = new Date();
                         const time = now.toLocaleTimeString('en-US', {
                             hour: '2-digit',
@@ -76,21 +75,19 @@ export default function ChatPage() {
         }
     };
 
-    // ✅ Khi chọn 1 user, gửi event "join" để tham gia channel
     const handleContactUser = (user) => {
         setContactUser(user);
-        setMessages([]); // reset tin nhắn cũ
+        setMessages([]);
 
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify({
                 type: "join",
-                target_id: user._id
+                target_id: user.id
             }));
             console.log(`🚀 Joined channel with ${user.email}`);
         }
     };
 
-    // ✅ Gửi message
     const sendMessage = () => {
         if (!input || !contactUser) return;
 
@@ -103,13 +100,12 @@ export default function ChatPage() {
 
         const msg = {
             id: Date.now(),
-            target_id: contactUser._id,
+            target_id: contactUser.id,
             data: input,
             time: timeString,
             type: "message"
         };
 
-        // setMessages((m) => [...m, msg]);
         setInput("");
 
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -120,8 +116,6 @@ export default function ChatPage() {
             }
         }
     };
-
-    console.log("contactUser: ", contactUser);
 
     useEffect(() => {
         getAllUser();
@@ -137,7 +131,6 @@ export default function ChatPage() {
     return (
         <div className="h-[100%] w-full bg-background overflow-hidden">
             <div className="mx-auto flex flex-col md:flex-row h-full max-w-7xl gap-6 p-4 md:p-6 overflow-hidden">
-                {/* Left column: contacts (stacked on mobile) */}
                 <aside className="w-full md:w-80">
                     <Card>
                         <CardHeader>
@@ -150,26 +143,25 @@ export default function ChatPage() {
                             <div className="mb-4">
                                 <Input placeholder="Search contacts" />
                             </div>
-                            <div className="space-y-2 max-h-[60vh] pr-2">
+                            <div className="space-y-2 max-h-[60vh] overflow-auto pr-2">
                                 {users.map((user) => (
                                     <div
-                                        key={user.email}
-                                        className={`flex items-center gap-3 rounded-lg p-3 cursor-pointer hover:bg-accent hover:shadow-sm transition ${contactUser?.email === user.email ? "bg-accent" : ""}`}
+                                        key={user.id}
+                                        className={`flex items-center gap-3 rounded-lg p-3 cursor-pointer hover:bg-accent hover:shadow-sm transition ${contactUser?.id === user.id ? "bg-accent" : ""}`}
                                         onClick={() => handleContactUser(user)}
                                     >
                                         <Avatar className='h-8 w-8'>
                                             <AvatarImage src={user.photoUrl} />
-                                            <AvatarFallback>CN</AvatarFallback>
+                                            <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <div className="font-medium">{user.username}</div>
-                                                    <p className="text-xs text-muted-foreground truncate break-words max-w-[150px]">
-                                                        Last message preview goes here
+                                                    <p className="text-xs text-muted-foreground truncate">
+                                                        {user.email}
                                                     </p>
                                                 </div>
-                                                <div className="text-xs text-muted-foreground">2h</div>
                                             </div>
                                         </div>
                                     </div>
@@ -179,7 +171,6 @@ export default function ChatPage() {
                     </Card>
                 </aside>
 
-                {/* Right column: conversation */}
                 {contactUser && (
                     <section className="w-full flex-1 flex flex-col min-h-0">
                         <Card className="w-full flex-1 flex flex-col shadow-lg min-h-0">
@@ -187,7 +178,7 @@ export default function ChatPage() {
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-10 w-10">
                                         <AvatarImage src={contactUser.photoUrl} />
-                                        <AvatarFallback>OM</AvatarFallback>
+                                        <AvatarFallback>{contactUser.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                                     </Avatar>
                                     <div>
                                         <div className="font-semibold">{contactUser.username}</div>
@@ -199,10 +190,10 @@ export default function ChatPage() {
                             <CardContent className="flex-1 overflow-auto p-4 md:p-6" ref={messagesRef}>
                                 <div className="space-y-4">
                                     {messages.map((m) => (
-                                        <div key={m.id} className={`flex ${m.target_id === contactUser._id ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[70%] p-3 rounded-lg shadow-sm ${m.target_id === contactUser._id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                        <div key={m.id} className={`flex ${m.target_id === contactUser.id ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`max-w-[70%] p-3 rounded-lg shadow-sm ${m.target_id === contactUser.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                                                 <div className="text-sm whitespace-pre-wrap">{m.data}</div>
-                                                <div className={`text-xs mt-1 ${m.target_id === contactUser._id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{m.time}</div>
+                                                <div className={`text-xs mt-1 ${m.target_id === contactUser.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{m.time}</div>
                                             </div>
                                         </div>
                                     ))}

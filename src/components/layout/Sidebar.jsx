@@ -1,11 +1,11 @@
 import React from 'react'
-import { Users, MessageSquare, Settings, Code, Server } from 'lucide-react'
+import { Users, MessageSquare, Settings, Code, Server, Package, LayoutDashboard } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const navItems = [
-  { key: 'dashboard', label: 'Dashboard', icon: <Users className="h-4 w-4" />, path: '/dashboard', description: 'Overview and analytics' },
-  { key: 'clusters', label: 'Clusters', icon: <Server className="h-4 w-4" />, path: '/clusters', description: 'Manage server clusters' },
-  { key: 'sites', label: 'Sites', icon: <Server className="h-4 w-4" />, path: '/sites', description: 'Manage applications (API + CMS)' },
+  { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, path: '/dashboard', description: 'Overview and analytics' },
+  { key: 'servers', label: 'Servers', icon: <Server className="h-4 w-4" />, path: '/servers', description: 'Manage infrastructure' },
+  { key: 'apps', label: 'Applications', icon: <Package className="h-4 w-4" />, path: '/apps', description: 'Deploy and manage apps' },
   { key: 'editor', label: 'Editor', icon: <Code className="h-4 w-4" />, path: '/editor', description: 'Code editor' },
   { key: 'chat', label: 'Chat', icon: <MessageSquare className="h-4 w-4" />, path: '/chat', description: 'Messages' },
 ]
@@ -22,8 +22,10 @@ export default function Sidebar() {
     <aside className="flex h-full w-full flex-col justify-between bg-background px-2 py-4">
       <div>
         <div className="flex items-center gap-3 px-3 py-2">
-          <img src="/logo192.png" alt="logo" className="h-8 w-8 rounded-md" />
-          <h2 className="text-lg font-semibold">MyApp</h2>
+          <div className="h-8 w-8 rounded-md bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <Server className="h-5 w-5 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold">K8s Manager</h2>
         </div>
         <nav className="mt-4 space-y-1 px-1">
           {navItems.map(item => {

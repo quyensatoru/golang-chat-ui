@@ -8,8 +8,8 @@ import AppProvider from "./components/layout/AppProvider";
 import useFirebase from "./hook/firebase";
 import LoginPage from "./pages/login";
 import SettingsPage from "./pages/settings";
-import ClustersPage from "./pages/clusters";
-import SitesPage from "./pages/sites";
+import ServersPage from "./pages/servers";
+import AppsPage from "./pages/apps";
 
 const ProtectedRoute = ({ user }) => {
     if (!user) {
@@ -59,8 +59,8 @@ export default function App() {
                 </Route>
                 <Route element={<ProtectedRoute user={user} />}>
                     <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/clusters" element={<ClustersPage />} />
-                    <Route path="/sites" element={<SitesPage />} />
+                    <Route path="/servers" element={<ServersPage />} />
+                    <Route path="/apps" element={<AppsPage />} />
                     <Route path="/editor" element={<EditorPage />} />
                     <Route path="/chat" element={<ChatPage />} />
                     <Route path="/settings" element={<SettingsPage />} />

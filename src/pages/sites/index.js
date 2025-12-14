@@ -31,7 +31,7 @@ export default function SitesPage() {
   const [newSite, setNewSite] = useState({
     cluster_id: '',
     app_api: {
-      application_name: '',
+      name: '',
       repo_image: '',
       domain: '',
       port: '',
@@ -43,7 +43,7 @@ export default function SitesPage() {
       },
     },
     app_cms: {
-      application_name: '',
+      name: '',
       repo_image: '',
       domain: '',
       port: '',
@@ -81,7 +81,7 @@ export default function SitesPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/sites', {
+      const res = await fetch('http://localhost:3000/deployments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -91,14 +91,14 @@ export default function SitesPage() {
         setNewSite({
           cluster_id: '',
           app_api: {
-            application_name: '',
+            name: '',
             repo_image: '',
             domain: '',
             port: '',
             environment: '',
             services: { redis: false, mongo: false, rabbitmq: false },
           },
-          app_cms: { application_name: '', repo_image: '', domain: '', port: '', environment: '' },
+          app_cms: { name: '', repo_image: '', domain: '', port: '', environment: '' },
         });
         setIsModalOpen(false);
         fetchSites();
@@ -122,25 +122,27 @@ export default function SitesPage() {
         <CardContent>
           <div className="rounded-md border">
             <div className="grid grid-cols-5 gap-4 p-4 font-medium border-b bg-muted/50">
-              <div>App (API)</div>
-              <div>App (CMS)</div>
-              <div>Type</div>
+              <div>Service</div>
               <div>Domain</div>
+              <div>Status</div>
+              <div>CreatedAt</div>
               <div>Actions</div>
             </div>
             <div className="divide-y">
               {sites.map((s) => (
                 <div key={s._id} className="grid grid-cols-5 gap-4 p-4 items-center">
                   <div>
-                    <div className="font-medium">{s.app_api?.application_name}</div>
-                    <div className="text-xs text-muted-foreground">{s.app_api?.repo_image}</div>
+                    <div className="font-medium">{s.name}</div>
+                    <div className="text-xs text-muted-foreground">{s.repo_image}</div>
                   </div>
+                  <div>{s.domain}</div>
                   <div>
-                    <div className="font-medium">{s.app_cms?.application_name}</div>
-                    <div className="text-xs text-muted-foreground">{s.app_cms?.repo_image}</div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                      {s.status || 'unknown'}
+                    </span>
                   </div>
-                  <div>{'API + CMS'}</div>
-                  <div>{s.app_api?.domain || s.app_cms?.domain}</div>
+                  <div>{new Date(s.created_at).toLocaleString("vi-VN")}</div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">Edit</Button>
                     <Button variant="destructive" size="sm">Delete</Button>
@@ -158,28 +160,28 @@ export default function SitesPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Site">
         <form onSubmit={handleSubmit}>
           <div className="space-y-6">
-                <div className="border-b pb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end mb-4">
-                    <div>
-                      <Label htmlFor="cluster_select">Select Cluster</Label>
-                      <select
-                        id="cluster_select"
-                        value={newSite.cluster_id}
-                        onChange={(e) => setNewSite({ ...newSite, cluster_id: e.target.value })}
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <option value="">-- Select cluster --</option>
-                        {clustersList.map((c) => (
-                          <option key={c._id} value={c._id}>{c.name || c.ip_address || c._id}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground">API Application</h3>
+            <div className="border-b pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end mb-4">
+                <div>
+                  <Label htmlFor="cluster_select">Select Cluster</Label>
+                  <select
+                    id="cluster_select"
+                    value={newSite.cluster_id}
+                    onChange={(e) => setNewSite({ ...newSite, cluster_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">-- Select cluster --</option>
+                    {clustersList.map((c) => (
+                      <option key={c._id} value={c._id}>{c.name || c.ip_address || c._id}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <h3 className="text-sm font-semibold mb-3 text-muted-foreground">API Application</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="api_name">Application Name (API)</Label>
-                  <Input id="api_name" placeholder="e.g. my-service-api" value={newSite.app_api.application_name} onChange={(e) => setNewSite({ ...newSite, app_api: { ...newSite.app_api, application_name: e.target.value } })} required />
+                  <Input id="api_name" placeholder="e.g. my-service-api" value={newSite.app_api.name} onChange={(e) => setNewSite({ ...newSite, app_api: { ...newSite.app_api, name: e.target.value } })} required />
                 </div>
                 <div>
                   <Label htmlFor="api_repo">Repository Image (API)</Label>
@@ -194,8 +196,16 @@ export default function SitesPage() {
                   <Input id="api_port" placeholder="e.g. 8080" value={newSite.app_api.port} onChange={(e) => setNewSite({ ...newSite, app_api: { ...newSite.app_api, port: e.target.value } })} />
                 </div>
                 <div className="col-span-2">
-                  <Label htmlFor="api_env">Environment (API)</Label>
-                  <textarea id="api_env" rows="4" value={newSite.app_api.environment} onChange={(e) => setNewSite({ ...newSite, app_api: { ...newSite.app_api, environment: e.target.value } })} className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" placeholder={'NODE_ENV=production\nLOG_LEVEL=info\nDEBUG=false'} />
+                  <Label htmlFor="api_env">Environment Variables (API) - JSON Format</Label>
+                  <textarea
+                    id="api_env"
+                    rows="5"
+                    value={newSite.app_api.environment}
+                    onChange={(e) => setNewSite({ ...newSite, app_api: { ...newSite.app_api, environment: e.target.value } })}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono"
+                    placeholder={'{\n  "NODE_ENV": "production",\n  "LOG_LEVEL": "info",\n  "DEBUG": "false"\n}'}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Valid JSON format with key-value pairs</p>
                 </div>
 
                 <div className="col-span-2">
@@ -240,7 +250,7 @@ export default function SitesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="cms_name">Application Name (CMS)</Label>
-                  <Input id="cms_name" placeholder="e.g. my-cms" value={newSite.app_cms.application_name} onChange={(e) => setNewSite({ ...newSite, app_cms: { ...newSite.app_cms, application_name: e.target.value } })} required />
+                  <Input id="cms_name" placeholder="e.g. my-cms" value={newSite.app_cms.name} onChange={(e) => setNewSite({ ...newSite, app_cms: { ...newSite.app_cms, name: e.target.value } })} required />
                 </div>
                 <div>
                   <Label htmlFor="cms_repo">Repository Image (CMS)</Label>
@@ -255,8 +265,16 @@ export default function SitesPage() {
                   <Input id="cms_port" placeholder="e.g. 3000" value={newSite.app_cms.port} onChange={(e) => setNewSite({ ...newSite, app_cms: { ...newSite.app_cms, port: e.target.value } })} />
                 </div>
                 <div className="col-span-2">
-                  <Label htmlFor="cms_env">Environment (CMS)</Label>
-                  <textarea id="cms_env" rows="4" value={newSite.app_cms.environment} onChange={(e) => setNewSite({ ...newSite, app_cms: { ...newSite.app_cms, environment: e.target.value } })} className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" placeholder={'NODE_ENV=production\nCMS_URL=https://cms.example.com'} />
+                  <Label htmlFor="cms_env">Environment Variables (CMS) - JSON Format</Label>
+                  <textarea
+                    id="cms_env"
+                    rows="5"
+                    value={newSite.app_cms.environment}
+                    onChange={(e) => setNewSite({ ...newSite, app_cms: { ...newSite.app_cms, environment: e.target.value } })}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none font-mono"
+                    placeholder={'{\n  "NODE_ENV": "production",\n  "CMS_URL": "https://cms.example.com"\n}'}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Valid JSON format with key-value pairs</p>
                 </div>
               </div>
             </div>
