@@ -4,6 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
 import { X } from 'lucide-react';
+import { api } from '../../lib/api';
 
 const Modal = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
@@ -59,7 +60,7 @@ export default function SitesPage() {
 
   const fetchSites = async () => {
     try {
-      const res = await fetch('http://localhost:3000/deployments', { credentials: 'include' });
+      const res = await api.fetch('/deployments');
       const data = await res.json();
       if (data.data) setSites(data.data);
     } catch (e) {
@@ -69,7 +70,7 @@ export default function SitesPage() {
 
   const fetchClusters = async () => {
     try {
-      const res = await fetch('http://localhost:3000/clusters', { credentials: 'include' });
+      const res = await api.fetch('/clusters');
       const data = await res.json();
       if (data.data) setClustersList(data.data);
     } catch (e) {
@@ -81,12 +82,7 @@ export default function SitesPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/deployments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(newSite),
-      });
+      const res = await api.post('/deployments', newSite);
       if (res.ok) {
         setNewSite({
           cluster_id: '',

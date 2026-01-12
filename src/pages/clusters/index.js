@@ -4,6 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
 import { X } from 'lucide-react';
+import { api } from '../../lib/api';
 
 // Basic modal component with scrollable content
 const Modal = ({ isOpen, onClose, children, title }) => {
@@ -43,9 +44,7 @@ export default function ClustersPage() {
 
   const fetchClusters = async () => {
     try {
-      const res = await fetch('http://localhost:3000/clusters', {
-        credentials: 'include',
-      });
+      const res = await api.fetch('/clusters');
       const data = await res.json();
       if (data.data) {
         setClusters(data.data);
@@ -60,14 +59,7 @@ export default function ClustersPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/clusters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(newCluster),
-      });
+      const res = await api.post('/clusters', newCluster);
 
       if (res.ok) {
         setNewCluster({ ip_address: '', name: "", username: '', password: '' });
@@ -105,9 +97,8 @@ export default function ClustersPage() {
                   <div>{cluster.ip_address}</div>
                   <div>{cluster.username}</div>
                   <div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      cluster.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${cluster.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
                       {cluster.status || 'unknown'}
                     </span>
                   </div>
@@ -183,14 +174,14 @@ export default function ClustersPage() {
           </div>
 
           <div className="mt-6 flex justify-end gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setIsModalOpen(false)}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               type="submit"
               disabled={isLoading}
             >

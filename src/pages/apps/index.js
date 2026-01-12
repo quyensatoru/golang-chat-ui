@@ -1,58 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
-import { X, Package, CheckCircle2, XCircle, Clock } from 'lucide-react';
-
-const Modal = ({ isOpen, onClose, children, title }) => {
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-card rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between border-b p-6">
-                    <h2 className="text-lg font-semibold">{title}</h2>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-                <div className="overflow-y-auto flex-1">
-                    <div className="p-6">{children}</div>
-                </div>
-            </div>
-        </div>
-    );
-};
+import { Package, CheckCircle2, XCircle, Clock, Plus, Trash2, Info } from 'lucide-react';
+import { api } from '../../lib/api';
+import { useEffect, useState } from 'react';
 
 const AppStatusBadge = ({ status }) => {
     const statusConfig = {
-        active: { bg: 'bg-green-100', text: 'text-green-800', icon: CheckCircle2, label: 'Active' },
-        inactive: { bg: 'bg-gray-100', text: 'text-gray-800', icon: XCircle, label: 'Inactive' },
-        pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock, label: 'Pending' },
+        active: { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', icon: CheckCircle2, label: 'Active', ring: 'ring-emerald-600/20' },
+        inactive: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-400', icon: XCircle, label: 'Inactive', ring: 'ring-slate-600/20' },
+        pending: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: Clock, label: 'Pending', ring: 'ring-amber-600/20' },
     };
 
     const config = statusConfig[status] || statusConfig.inactive;
     const Icon = config.icon;
 
     return (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-            <Icon className="h-3 w-3" />
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text} ring-1 ${config.ring} shadow-sm`}>
+            <Icon className="h-3.5 w-3.5" />
             {config.label}
         </span>
     );
 };
 
 export default function AppsPage() {
+    const navigate = useNavigate();
     const [apps, setApps] = useState([]);
     const [servers, setServers] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newApp, setNewApp] = useState({
-        name: '',
-        helm_chart: '',
-        server_id: '',
-        services: [], // Array of { name: '', env_raw: '' }
-    });
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -62,9 +36,7 @@ export default function AppsPage() {
 
     const fetchApps = async () => {
         try {
-            const res = await fetch('http://localhost:3000/apps', {
-                credentials: 'include',
-            });
+            const res = await api.fetch('/apps');
             const data = await res.json();
             if (data.data) {
                 setApps(data.data);
@@ -76,9 +48,7 @@ export default function AppsPage() {
 
     const fetchServers = async () => {
         try {
-            const res = await fetch('http://localhost:3000/servers', {
-                credentials: 'include',
-            });
+            const res = await api.fetch('/servers');
             const data = await res.json();
             if (data.data) {
                 setServers(data.data.filter(s => s.status === 'k8s_ready'));
@@ -88,60 +58,12 @@ export default function AppsPage() {
         }
     };
 
-    console.log('newApp:', newApp);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-
-        try {
-            // Validate and transform services
-            const transformedServices = newApp.services.map((svc) => ({
-                name: svc.name,
-                env_raw: JSON.stringify(JSON.parse(svc.env_raw)),
-            }));
-            
-            const payload = {
-                ...newApp,
-                services: transformedServices
-            };
-
-            const res = await fetch('http://localhost:3000/apps', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify(payload),
-            });
-
-            if (res.ok) {
-                setNewApp({
-                    name: '',
-                    helm_chart: '',
-                    server_id: '',
-                    services: [],
-                });
-                setIsModalOpen(false);
-                fetchApps();
-            } else {
-                console.error('Failed to create app');
-            }
-        } catch (error) {
-            console.error('Error creating app:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const deleteApp = async (id) => {
         if (!window.confirm('Are you sure you want to delete this app?')) return;
 
         try {
-            const res = await fetch(`http://localhost:3000/apps/${id}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
+            const res = await api.delete(`/apps/${id}`);
 
             if (res.ok) {
                 fetchApps();
@@ -151,77 +73,90 @@ export default function AppsPage() {
         }
     };
 
+
     return (
-        <div className="container mx-auto p-4 md:p-6 space-y-6">
+        <div className="container mx-auto p-4 md:p-6 min-h-screen">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Applications</h1>
-                    <p className="text-muted-foreground mt-1">Deploy and manage your applications on Kubernetes</p>
+                    <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Applications</h1>
+                    <p className="text-slate-600 dark:text-slate-400 my-2 text-lg">Deploy and manage your applications on Kubernetes</p>
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} size="lg">
-                    <Package className="mr-2 h-4 w-4" />
+                <Button
+                    onClick={() => navigate('/apps/create')}
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                    <Package className="mr-2 h-5 w-5" />
                     Deploy App
                 </Button>
             </div>
 
             {servers.length === 0 && (
-                <Card className="border-yellow-200 bg-yellow-50">
+                <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 shadow-md">
                     <CardContent className="pt-6">
-                        <p className="text-sm text-yellow-800">
+                        <p className="text-sm text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                            <Info className="h-5 w-5" />
                             ⚠️ No Kubernetes-ready servers available. Please add a server and install K8s first.
                         </p>
                     </CardContent>
                 </Card>
             )}
 
-            <Card>
+            <Card className="shadow-lg border-slate-200 dark:border-slate-700">
                 <CardContent className="p-0">
-                    <div className="rounded-md border">
-                        <div className="grid grid-cols-6 gap-4 p-4 font-medium border-b bg-muted/50">
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="grid grid-cols-6 gap-4 p-4 font-semibold border-b bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 text-slate-700 dark:text-slate-300">
                             <div className="col-span-2">Application</div>
                             <div className="col-span-2">Helm Chart / Services</div>
                             <div>Server</div>
                             <div>Status</div>
                         </div>
-                        <div className="divide-y">
+                        <div className="divide-y divide-slate-200 dark:divide-slate-700">
                             {apps.map((app) => (
-                                <div key={app.id} className="grid grid-cols-6 gap-4 p-4 items-center hover:bg-muted/30 transition-colors">
+                                <div key={app.id} className="grid grid-cols-6 gap-4 p-4 items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <div className="col-span-2">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                                <Package className="h-5 w-5 text-blue-600" />
+                                            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                                                <Package className="h-6 w-6 text-white" />
                                             </div>
                                             <div>
-                                                <div className="font-medium">{app.name}</div>
-                                                <div className="text-xs text-muted-foreground">ID: {app.id}</div>
+                                                <div className="font-semibold text-slate-900 dark:text-slate-100">{app.name}</div>
+                                                <div className="text-xs text-slate-500 dark:text-slate-400">ID: {app.id}</div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="col-span-2">
-                                        <div className="text-sm font-medium">{app.helm_chart}</div>
-                                        <div className="flex flex-wrap gap-1 mt-1">
+                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{app.helm_chart}</div>
+                                        <div className="flex flex-wrap gap-1.5 mt-1.5">
                                             {app.services && app.services.map((svc, idx) => (
-                                                <span key={idx} className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
+                                                <span key={idx} className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md font-medium border border-blue-200 dark:border-blue-800">
                                                     {svc.name}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
                                     <div>
-                                        <span className="text-sm">{app.server?.name || 'Unknown'}</span>
+                                        <span className="text-sm text-slate-700 dark:text-slate-300">{app.server?.name || 'Unknown'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <AppStatusBadge status={app.status} />
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteApp(app.id)}>
-                                            <X className="h-4 w-4" />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                            onClick={() => deleteApp(app.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>
                             ))}
                             {apps.length === 0 && (
-                                <div className="p-12 text-center text-muted-foreground">
-                                    <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="text-lg font-medium mb-2">No applications deployed</p>
+                                <div className="p-16 text-center text-slate-500 dark:text-slate-400">
+                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 mb-4">
+                                        <Package className="h-10 w-10 opacity-30" />
+                                    </div>
+                                    <p className="text-lg font-semibold mb-2">No applications deployed</p>
                                     <p className="text-sm">Deploy your first application to get started</p>
                                 </div>
                             )}
@@ -230,132 +165,6 @@ export default function AppsPage() {
                 </CardContent>
             </Card>
 
-            {/* Deploy App Modal */}
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Deploy New Application">
-                <form onSubmit={handleSubmit}>
-                    {servers.length === 0 && (
-                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md text-sm mb-4">
-                            ⚠️ No Kubernetes-ready servers available. Please go to the Servers page and install K8s on a server first.
-                        </div>
-                    )}
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="server_id">Select Server</Label>
-                            <select
-                                id="server_id"
-                                value={newApp.server_id}
-                                onChange={(e) => setNewApp({ ...newApp, server_id: parseInt(e.target.value) })}
-                                className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                required
-                            >
-                                <option value="">-- Select a server --</option>
-                                {servers.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name} ({s.ip_address})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3">
-                            <div>
-                                <Label htmlFor="name">Application Name</Label>
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    value={newApp.name}
-                                    onChange={(e) => setNewApp({ ...newApp, name: e.target.value })}
-                                    placeholder="e.g. my-app"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="helm_chart">Helm Chart (Git URL)</Label>
-                                <Input
-                                    id="helm_chart"
-                                    type="text"
-                                    value={newApp.helm_chart}
-                                    onChange={(e) => setNewApp({ ...newApp, helm_chart: e.target.value })}
-                                    placeholder="e.g. https://github.com/my/repo.git"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <Label>Services</Label>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setNewApp({ ...newApp, services: [...newApp.services, { name: '', env_raw: '' }] })}
-                                >
-                                    Add Service
-                                </Button>
-                            </div>
-                            <div className="space-y-4">
-                                {newApp.services.map((service, index) => (
-                                    <div key={index} className="p-3 border rounded-md relative bg-muted/20">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="absolute top-2 right-2 text-muted-foreground hover:text-destructive h-6 w-6 p-0"
-                                            onClick={() => {
-                                                const updatedServices = [...newApp.services];
-                                                updatedServices.splice(index, 1);
-                                                setNewApp({ ...newApp, services: updatedServices });
-                                            }}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
-                                        <div className="mb-3 pr-8">
-                                            <Label className="text-xs text-muted-foreground">Service Name</Label>
-                                            <Input
-                                                value={service.name}
-                                                onChange={(e) => {
-                                                    const updatedServices = [...newApp.services];
-                                                    updatedServices[index].name = e.target.value;
-                                                    setNewApp({ ...newApp, services: updatedServices });
-                                                }}
-                                                placeholder="e.g. backend"
-                                                className="mt-1"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs text-muted-foreground">Environment Variables (JSON)</Label>
-                                                <textarea
-                                                    value={service.env_raw}
-                                                    onChange={(e) => {
-                                                        const updatedServices = [...newApp.services];
-                                                        updatedServices[index].env_raw = e.target.value;
-                                                        setNewApp({ ...newApp, services: updatedServices });
-                                                    }}
-                                                    rows={5}
-                                                    placeholder={`{\n  "KEY": "VALUE",\n  "ANOTHER_KEY": "ANOTHER_VALUE"\n}`}
-                                                    className="flex min-h-[5rem] w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 flex justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={isLoading || servers.length === 0}>
-                            {isLoading ? 'Deploying...' : 'Deploy Application'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
         </div>
     );
 }

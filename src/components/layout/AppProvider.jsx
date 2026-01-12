@@ -19,7 +19,7 @@ export default function AppProvider() {
       {/* Main area */}
       <div className="flex-1 flex flex-col">
         <Navbar onMenuClick={openMobile} />
-        <main className="flex-1 h-[calc(100vh-56px)]">
+        <main className="flex-1 h-[calc(100vh-56px)] bg-gradient-to-br from-slate-50 to-blue-50/30 dark:from-slate-900 dark:to-slate-900/50">
           <div className="max-w-7xl mx-auto p-4 h-full">
             <Outlet />
           </div>
