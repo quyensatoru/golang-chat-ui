@@ -63,10 +63,11 @@ export default function ChatPage() {
     const connectSocket = async () => {
         try {
             //replace https and http from host
-            const host = process.env.REACT_APP_API_URL
+            const host = window.__ENV__?.API_URL
                 .replace(/^https?:\/\//, '')
                 .replace(/\/$/, '');
-            const socket = new WebSocket(`ws://${host}/message/ws`);
+            const protocol = window?.location?.protocol === "https:" ? "wss" : "ws";
+            const socket = new WebSocket(`${protocol}://${host}/message/ws`);
             socketRef.current = socket;
 
             socket.onopen = () => {
@@ -108,7 +109,7 @@ export default function ChatPage() {
                 target_id: user.id
             }));
         }
-        workerRef.current.postMessage({ type: 'merge-message', data: { channelID: buildChannel(user.id, currentUser.id), limit: 20, offset: 0 }, currentData: [] });
+        workerRef.current.postMessage({ type: 'merge-message', env: { API_URL: window.__ENV__.API_URL }, data: { channelID: buildChannel(user.id, currentUser.id), limit: 20, offset: 0 }, currentData: [] });
     };
 
     const sendMessage = () => {
@@ -237,7 +238,7 @@ export default function ChatPage() {
                                 >
                                     <InfiniteScroll
                                         dataLength={messages.length}
-                                        next={() => { workerRef.current.postMessage({ type: 'merge-message', data: { channelID: buildChannel(contactUser.id, currentUser.id), limit: 20, offset: messages.length }, currentData: messages }); }}
+                                        next={() => { workerRef.current.postMessage({ type: 'merge-message', env: { API_URL: window.__ENV__.API_URL }, data: { channelID: buildChannel(contactUser.id, currentUser.id), limit: 20, offset: messages.length }, currentData: messages }); }}
                                         style={{ display: 'flex', width: '100%', flexDirection: 'column-reverse' }}
                                         inverse={true}
                                         hasMore={true}

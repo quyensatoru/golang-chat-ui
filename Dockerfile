@@ -1,28 +1,36 @@
+# =========================
 # Build stage
+# =========================
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy dependency files trước để cache
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy the rest of the application
+# Copy source & build
 COPY . .
 
-# Build the application
 RUN npm run build
 
-# Production stage
+
+# =========================
+# Runtime stage
+# =========================
 FROM nginx:alpine
 
-# Copy the build output to replace the default nginx contents.
+# Copy built files
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Expose port 80
+# Nginx config cho SPA
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+# Copy nginx config if needed, but use default
+
 EXPOSE 80
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]

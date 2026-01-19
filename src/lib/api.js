@@ -1,7 +1,7 @@
 import { auth } from './firebase';
 import { signOut } from 'firebase/auth';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_URL = window.__ENV__?.API_URL || 'http://localhost:3000';
 
 export const api = {
     fetch: async (url, options = {}) => {
